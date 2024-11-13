@@ -15,37 +15,43 @@ type TimeWindow struct {
 
 // LeapArray 是一个具有时间窗口的数组
 type LeapArray struct {
-	windows  []TimeWindow  // 循环数组，每个元素是一个时间窗口
-	size     int           // 数组的大小（窗口数量）
-	interval time.Duration // 每个窗口的时长
-	mu       sync.Mutex    // 保证并发安全
+	windows  []TimeWindow // 循环数组，每个元素是一个时间窗口
+	size     int64        // 数组的大小（窗口数量）
+	interval int64        // 每个窗口的时长
+	mu       sync.Mutex   // 保证并发安全
 }
 
 // NewLeapArray 初始化一个 Leap Array
-func NewLeapArray(size int, interval time.Duration) *LeapArray {
+func NewLeapArray(size int64, intervalMs int64) *LeapArray {
+	if size <= 0 {
+		panic("size<=0")
+	}
 	windows := make([]TimeWindow, size)
 	return &LeapArray{
 		windows:  windows,
 		size:     size,
-		interval: interval,
+		interval: intervalMs,
 	}
 }
 
 // getCurrentWindow 获取当前时间对应的窗口
+/**
+下标 = (当前时间 % 时间跨度) / 一个时间窗口的时间,而 时间跨度= 一个时间窗口的时间 * 窗口数量（整个array能代表的时间长度）
+*/
 func (la *LeapArray) getCurrentWindow() *TimeWindow {
 	la.mu.Lock()
 	defer la.mu.Unlock()
 
 	now := time.Now()
-	index := int(now.Unix()) % la.size // 计算当前时间对应的窗口索引
+	index := (now.Unix() % (la.size * la.interval)) / la.interval // 计算当前时间对应的窗口索引
 
-	window := &la.windows[index]
-	if now.Sub(window.start) >= la.interval {
+	curWindow := &la.windows[index]
+	if now.Sub(curWindow.start).Milliseconds() >= la.interval {
 		// 如果窗口已过期，重置它
-		window.count = 0
-		window.start = now
+		curWindow.count = 0
+		curWindow.start = now
 	}
-	return window
+	return curWindow
 }
 
 // AddRequest 向当前窗口添加一个请求计数
@@ -65,7 +71,7 @@ func (la *LeapArray) GetRequestCount() int {
 	now := time.Now()
 	for _, window := range la.windows {
 		// 仅统计还在有效期内的窗口
-		if now.Sub(window.start) < time.Duration(la.size)*la.interval {
+		if now.Sub(window.start).Milliseconds() < la.size*la.interval {
 			total += window.count
 		}
 	}
@@ -73,17 +79,17 @@ func (la *LeapArray) GetRequestCount() int {
 }
 
 func main() {
-	leapArray := NewLeapArray(6, 10*time.Millisecond) // 6个窗口，每个窗口10ms
+	leapArray := NewLeapArray(6, 20) // 6个窗口，每个窗口10ms , 总长度是60ms
 
 	// 模拟请求
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 300; i++ {
 		log.Println("i")
 		leapArray.AddRequest()
 		time.Sleep(1 * time.Millisecond)
 	}
+	count := leapArray.GetRequestCount()
 
-	fmt.Printf("最近周期内的请求数: %d\n", leapArray.GetRequestCount()) //周期有效值为：窗口数 * 窗口长度
+	fmt.Printf("最近周期内的请求数: %d\n", count) //周期有效值为：窗口数 * 窗口长度
 }
 
-
-2024-11-11 10:05:35 正在研究滑动窗口：跳跃数组 leap array
+//2024-11-11 10:05:35 正在研究滑动窗口：跳跃数组 leap array
