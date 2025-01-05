@@ -41,6 +41,77 @@ func testFun() {
 	// 等待退出信号
 	<-quit
 }
+
+// FnTimer1 Timer的使用用法
+func FnTimer1() {
+	timer := time.NewTimer(time.Second * 5)
+	fmt.Printf("timer 的启动时间为:%v\n", time.Now())
+
+	expire := <-timer.C
+	fmt.Printf("timer 的触发时间为:%v\n", expire)
+}
+
+func FnTimer2() {
+	timeChannel := time.After(time.Second * 5)
+	fmt.Printf("timer 的启动时间为:%v\n", time.Now())
+
+	expire := <-timeChannel
+	fmt.Printf("timer 的触发时间为:%v\n", expire)
+}
+
+func FnTimer3() {
+	_ = time.AfterFunc(time.Second*5, func() {
+		fmt.Printf("定时器触发了,触发时间为%v\n", time.Now())
+	})
+
+	fmt.Printf("timer 的启动时间为:%v\n", time.Now())
+	time.Sleep(10 * time.Second) // 确保定时器触发
+}
+
+// FnTicket1 Ticker的错误的使用方法！！
+func FnTicket1() {
+	ticker := time.NewTicker(1 * time.Second)
+	//defer ticker.Stop()
+	go func() {
+		for now := range ticker.C {
+			// do something
+			fmt.Printf("ticker 的触发时间为:%v\n", now)
+		}
+		fmt.Println("ticker 结束")
+	}()
+
+	time.Sleep(4 * time.Second)
+	ticker.Stop()
+}
+
+// FnTicket2 Ticker的正确的使用方法！！
+func FnTicket2() {
+	ticker := time.NewTicker(1 * time.Second)
+	stopTicker := make(chan struct{})
+	defer ticker.Stop()
+	go func() {
+		for {
+			select {
+			case now := <-ticker.C:
+				// do something
+				fmt.Printf("ticker 的触发时间为:%v\n", now)
+			case <-stopTicker:
+				fmt.Println("ticker 结束")
+				return
+			}
+		}
+	}()
+
+	time.Sleep(4 * time.Second)
+	stopTicker <- struct{}{}
+}
+
 func main() {
-	testFun()
+	//FnTimer1()
+	//FnTimer2()
+	//FnTimer3()
+	//FnTicket1()
+	FnTicket2()
+	//testFun()
+	time.Sleep(999 * time.Second) //保证main不退出
 }

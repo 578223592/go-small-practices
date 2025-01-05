@@ -1,46 +1,42 @@
 package main
 
 import (
-	"fmt"
+	"sync/atomic"
 	"time"
 )
 
-// 如何改变行为：修改go.mode文件中的go版本
+var counter int32 = 1
 
-func testFun() {
+func atomicWriter() {
+	for {
+		atomic.AddInt32(&counter, 1) // 原子写操作
 
-	// 程序退出信号
-	quit := make(chan bool)
-	timer := time.NewTimer(2 * time.Second)
-
-	go func() {
-		// 确保定时器已触发并发送信号
-		time.Sleep(4 * time.Second)
-		// 试图读取通道，看是否有值
-		select {
-		case t := <-timer.C:
-			fmt.Println("接收到定时器信号：", t.Format(time.DateOnly))
-		default:
-			fmt.Println("无信号")
-		}
-
-		quit <- true
-	}()
-
-	// 确保定时器已触发并发送信号
-	time.Sleep(3 * time.Second)
-	wasStopped := timer.Stop()
-	if wasStopped {
-		// Go 1.23 或更高版本会走这条分支
-		fmt.Println("定时器未过期，停止成功")
-	} else {
-		// Go 1.23 以前的版本会走这条分支
-		fmt.Println("定时器已经过期并且信号已经发送")
 	}
-
-	// 等待退出信号
-	<-quit
 }
+func writer() {
+	for {
+		counter += 1
+		//time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func reader() {
+	for {
+		_ = counter
+		//_ = counter
+		//_ = counter
+		//_ = counter
+		//_ = counter
+		//_ = counter
+		//fmt.Println("Current counter:", counter) // 直接读读操作
+		//time.Sleep(1 * time.Millisecond)
+	}
+}
+
 func main() {
-	testFun()
+	//go atomicWriter()
+	//go writer()
+	go reader()
+
+	time.Sleep(3 * time.Second)
 }

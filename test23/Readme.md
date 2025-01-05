@@ -1,4 +1,2 @@
 
-
-
-timer
+本文件夹主要是关于timer和ticket的使用

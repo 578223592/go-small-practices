@@ -14,4 +14,5 @@ go 练手的一些小case ， 用来测试go的某些特性
 [test20](./test20):golang中的链式调用构建和option构建
 [test22](./test22):singleflight库学习
 [test22](./test22):golang中的timer 1.23及其之后与1.23之前的行为比较
+[test23](./test23):golang中timer、ticket的使用
 [test24](./test24):golang中atomic写入，但是正常读取的测试
