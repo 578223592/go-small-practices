@@ -106,6 +106,26 @@ func FnTicket2() {
 	stopTicker <- struct{}{}
 }
 
+func SomeTry() {
+	go func() {
+		for {
+			func() {
+				timer := time.NewTimer(time.Second * 2)
+				defer timer.Stop()
+
+				select {
+				case b := <-c:
+					if !b {
+						fmt.Println(time.Now(), "work...")
+					}
+				case <-timer.C: // BBB: normal receive from channel timeout event
+					fmt.Println(time.Now(), "timeout")
+				}
+			}()
+		}
+	}()
+}
+
 func main() {
 	//FnTimer1()
 	//FnTimer2()
