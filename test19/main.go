@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"time"
 )
@@ -43,13 +42,13 @@ func (la *LeapArray) getCurrentWindow() *TimeWindow {
 	defer la.mu.Unlock()
 
 	now := time.Now()
-	index := (now.Unix() % (la.size * la.interval)) / la.interval // 计算当前时间对应的窗口索引
+	index := (now.UnixMilli() % (la.size * la.interval)) / la.interval // 计算当前时间对应的窗口索引
 
 	curWindow := &la.windows[index]
 	if now.Sub(curWindow.start).Milliseconds() >= la.interval {
 		// 如果窗口已过期，重置它
 		curWindow.count = 0
-		curWindow.start = now
+		curWindow.start = now.Add(-1 * time.Duration(now.UnixMilli()%la.interval) * time.Millisecond) //计算当前窗口的开始时间
 	}
 	return curWindow
 }
@@ -71,7 +70,7 @@ func (la *LeapArray) GetRequestCount() int {
 	now := time.Now()
 	for _, window := range la.windows {
 		// 仅统计还在有效期内的窗口
-		if now.Sub(window.start).Milliseconds() < la.size*la.interval {
+		if now.Sub(window.start).Milliseconds() <= la.size*la.interval {
 			total += window.count
 		}
 	}
@@ -79,17 +78,22 @@ func (la *LeapArray) GetRequestCount() int {
 }
 
 func main() {
-	leapArray := NewLeapArray(6, 20) // 6个窗口，每个窗口10ms , 总长度是60ms
+	leapArray := NewLeapArray(6, 30) // 窗口个数，每个窗口长度（Ms）
 
 	// 模拟请求
-	for i := 0; i < 300; i++ {
-		log.Println("i")
+	for i := 0; i < 200; i++ {
+		//log.Println(i)
 		leapArray.AddRequest()
-		time.Sleep(1 * time.Millisecond)
+		//精确暂停1ms
+		time.Sleep(1 * time.Millisecond) //1ms一个请求
 	}
-	count := leapArray.GetRequestCount()
+	count := leapArray.GetRequestCount() //既然是将时间划分成了窗口，统计结果会波动一个窗口
+	// 虽然说是波动，实际上基本都是少统计。具体少统计的原因是：
+	// 当前时间会落在某一个窗口中间，那么这个窗口还没经历的部分就没办法统计进去了。而上一个周期经历的会因为leap array的特性被清空掉呢
+	//或者说leap array的粒度就是其中bucket的粒度，所以能统计到的时间片段的精度是有限的。
 
 	fmt.Printf("最近周期内的请求数: %d\n", count) //周期有效值为：窗口数 * 窗口长度
 }
 
 //2024-11-11 10:05:35 正在研究滑动窗口：跳跃数组 leap array
+// 2024年11月14日10:42:22 待研究sentinel源码中的leap array实现

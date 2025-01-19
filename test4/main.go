@@ -6,8 +6,6 @@ import (
 import jsoniter "github.com/json-iterator/go"
 
 // JSON 比原生json性能更好的解析器，用法与原生json一样
-// ddjson.JSON.Marshal()
-// ddjson.JSON.Unmarshal()
 var JSON = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func NewStudent() *Student {
@@ -15,15 +13,15 @@ func NewStudent() *Student {
 }
 
 type Student struct {
-	Name  string `json:"name,omitempty"`
+	Name  string
 	Age   int
 	Right bool
 }
 
-func NewWithoutPool(num int) {
-	for i := 0; i < num; i++ {
-		NewStudent()
-	}
+func (s *Student) Clear() {
+	s.Name = ""
+	s.Age = 0
+	s.Right = false
 }
 
 var studentPool = sync.Pool{
@@ -32,10 +30,10 @@ var studentPool = sync.Pool{
 	},
 }
 
-func NewWithPool(num int) {
-
-}
-
 func main() {
+	student := studentPool.Get().(*Student)
+	// 使用student
 
+	student.Clear() //返回给studentPool之前必须清空
+	studentPool.Put(student)
 }
