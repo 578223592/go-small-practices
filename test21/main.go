@@ -19,7 +19,7 @@ func test2() {
 	oneChan := make(chan int)
 
 	go func() {
-		time.Sleep(time.Second)
+		// time.Sleep(time.Second)
 		close(oneChan)
 	}()
 
@@ -27,10 +27,38 @@ func test2() {
 	case x, ok := <-oneChan:
 		log.Printf("x:%d,ok:%v", x, ok)
 	}
-	log.Printf("ok")
+	// log.Printf("ok")
+
+}
+
+func test3() {
+	oneChan := make(chan int, 10)
+	go func() {
+		time.Sleep(time.Second)
+		close(oneChan)
+	}()
+
+	oneChan <- 1
+}
+
+func test4() {
+	go func() {
+		for {
+			var i = 1
+			for i := 0; i < 100; i++ {
+				i++
+			}
+			log.Print(i)
+		}
+	}()
+	oneChan := make(chan int, 10)
+	oneChan = nil
+	oneChan <- 1
 
 }
 func main() {
-	// test1()
-	test2()
+	//test1()
+	// test2()
+	//test3()
+	test4()
 }
