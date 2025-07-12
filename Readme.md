@@ -23,3 +23,8 @@ go 练手的一些小case，用来测试go的某些特性
 [test25](./test25): 正码、反码、补码
 
 [test26](./test26): noCopy相关
+
+[test28](./test28): slice截取相关
+[test29](./test29): errors判断相关
+[test30](./test30): 包外可见性
+[test31](./test31): 包外可见性

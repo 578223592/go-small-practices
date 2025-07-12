@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"golang.org/x/sync/singleflight"
+
 	"log"
 	"math/rand"
 	"time"
@@ -40,4 +41,3 @@ query...1
 1st call: v1:liwenzhou.com1, shared:true
 2nd call: v2:liwenzhou.com1, shared:true
 */
-
