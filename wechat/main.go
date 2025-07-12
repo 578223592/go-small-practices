@@ -14,8 +14,8 @@ func main() {
 	//这里本地内存保存access_token，也可选择redis，memcache或者自定cache
 
 	//init config
-	appId := "wx3bd5aa70ad8f2695"
-	AppSecret := "693c028136a84ff64bd68b26f06ea5bd"
+	appId := "yours appId"
+	AppSecret := "yours AppSecret"
 	Token := ""
 	EncodingAESKey := ""
 	offCfg := &offConfig.Config{
